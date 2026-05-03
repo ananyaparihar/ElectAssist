@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { RotateCcw, ArrowRight, AlertTriangle } from 'lucide-react';
-import { translateText } from '../../services/TranslationService';
+import { LANG_CODES, translateText } from '../../services/translate';
 import './HowToVote.css';
 
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
@@ -26,14 +26,15 @@ const HowToVote: React.FC<HowToVoteProps> = ({ region, language, onNavigateToCha
 
   useEffect(() => {
     const translateHeader = async () => {
-      if (language === 'English') {
+      const languageCode = LANG_CODES[language] || 'en';
+      if (languageCode === 'en') {
         setHeaderText({ title: 'How to Vote', subtitle: `Step-by-step voting guide for ${region}`, btn: `Regenerate for ${region}` });
         return;
       }
       const [title, subtitle, btn] = await Promise.all([
-        translateText('How to Vote', language),
-        translateText(`Step-by-step voting guide for ${region}`, language),
-        translateText(`Regenerate for ${region}`, language)
+        translateText('How to Vote', languageCode),
+        translateText(`Step-by-step voting guide for ${region}`, languageCode),
+        translateText(`Regenerate for ${region}`, languageCode)
       ]);
       setHeaderText({ title: `📖 ${title}`, subtitle, btn });
     };
@@ -103,12 +104,13 @@ const HowToVote: React.FC<HowToVoteProps> = ({ region, language, onNavigateToCha
 
       const finalSteps = Array.isArray(steps) ? steps : [];
 
-      if (language !== 'English' && finalSteps.length > 0) {
+      const languageCode = LANG_CODES[language] || 'en';
+      if (languageCode !== 'en' && finalSteps.length > 0) {
         const translatedSteps = await Promise.all(finalSteps.map(async (s: ElectionStep) => ({
           ...s,
-          title: await translateText(s.title, language),
-          description: await translateText(s.description, language),
-          tip: await translateText(s.tip, language)
+          title: await translateText(s.title, languageCode),
+          description: await translateText(s.description, languageCode),
+          tip: await translateText(s.tip, languageCode)
         })));
         setElectionSteps(translatedSteps);
       } else {

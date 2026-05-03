@@ -243,3 +243,72 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+@media (max-width: 768px) {
+  .process-container {
+    padding: 14px;
+    gap: 14px;
+  }
+
+  .process-header {
+    padding: 6px 8px 0;
+    margin-bottom: 8px;
+  }
+
+  .process-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .process-header p {
+    font-size: 0.92rem;
+  }
+
+  .stepper-nav {
+    padding: 8px 6px;
+    margin-bottom: 8px;
+    overflow-x: auto;
+    justify-content: flex-start;
+    gap: 10px;
+  }
+
+  .step-indicator {
+    min-width: 86px;
+    max-width: none;
+    flex: 0 0 auto;
+    gap: 8px;
+  }
+
+  .step-connector {
+    display: none;
+  }
+
+  .step-label {
+    font-size: 0.74rem;
+  }
+
+  .step-card {
+    padding: 14px;
+  }
+
+  .step-card-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .step-description {
+    font-size: 0.95rem;
+    margin-bottom: 18px;
+  }
+
+  .step-tips li {
+    padding: 12px;
+  }
+
+  .process-actions {
+    gap: 10px;
+  }
+
+  .action-btn {
+    padding: 10px 14px;
+    font-size: 0.9rem;
+  }
+}

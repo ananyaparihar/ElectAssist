@@ -315,3 +315,64 @@
   0%, 80%, 100% { transform: scale(0); }
   40% { transform: scale(1.0); }
 }
+
+@media (max-width: 768px) {
+  .journey-container {
+    padding: 14px;
+    gap: 14px;
+  }
+
+  .journey-header {
+    padding: 14px;
+  }
+
+  .journey-title {
+    font-size: 22px;
+  }
+
+  .journey-card {
+    padding: 18px 14px;
+    border-radius: 14px;
+  }
+
+  .journey-emoji {
+    font-size: 48px;
+  }
+
+  .journey-scenario {
+    font-size: 14px;
+    margin-bottom: 18px;
+  }
+
+  .choices-list {
+    margin-bottom: 18px;
+  }
+
+  .results-summary {
+    padding: 14px;
+    margin-bottom: 20px;
+  }
+
+  .results-actions {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 375px) {
+  .journey-container {
+    padding: 10px;
+  }
+
+  .journey-title {
+    font-size: 20px;
+  }
+
+  .score-number {
+    font-size: 48px;
+  }
+
+  .score-label {
+    font-size: 18px;
+  }
+}

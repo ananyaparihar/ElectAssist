@@ -71,7 +71,8 @@
 
 .timeline-line {
   width: 2px;
-  height: calc(100% + 24px); /* Connect to next dot */
+  height: calc(100% + 24px);
+  /* Connect to next dot */
   background: var(--border-color);
   position: absolute;
   top: 40px;
@@ -161,4 +162,76 @@
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+}
+
+@media (max-width: 768px) {
+  .timeline-container {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .timeline-header {
+    margin-bottom: 18px;
+  }
+
+  .timeline-header h2 {
+    font-size: 1.35rem;
+  }
+
+  .timeline-header p {
+    font-size: 0.95rem;
+  }
+
+  .timeline-content {
+    max-width: 100%;
+    margin: 0;
+    padding-left: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .timeline-item {
+    display: block;
+    margin-bottom: 0;
+  }
+
+  .timeline-connector {
+    display: none;
+  }
+
+  .timeline-card {
+    height: 100%;
+    padding: 14px;
+  }
+
+  .timeline-title {
+    font-size: 1rem;
+    margin-bottom: 8px;
+  }
+
+  .timeline-date,
+  .timeline-desc {
+    font-size: 0.82rem;
+  }
+
+  .status-badge {
+    margin-top: 10px;
+    font-size: 0.68rem;
+    padding: 5px 9px;
+  }
+}
+
+@media (max-width: 375px) {
+  .timeline-container {
+    padding: 12px;
+  }
+
+  .timeline-content {
+    gap: 10px;
+  }
+
+  .timeline-card {
+    padding: 12px;
+  }
 }

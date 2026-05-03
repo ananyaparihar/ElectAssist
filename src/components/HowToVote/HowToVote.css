@@ -195,3 +195,52 @@
   0%   { background-position: -400px 0; }
   100% { background-position:  400px 0; }
 }
+
+@media (max-width: 768px) {
+  .htv-page {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .htv-header {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .htv-title {
+    font-size: 20px;
+  }
+
+  .htv-card {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .htv-step-desc,
+  .htv-card-footer {
+    padding-left: 0;
+  }
+
+  .htv-card-footer {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 375px) {
+  .htv-page {
+    padding: 10px;
+  }
+
+  .htv-title {
+    font-size: 18px;
+  }
+
+  .htv-step-title {
+    font-size: 14px;
+  }
+
+  .htv-step-desc {
+    font-size: 12px;
+  }
+}

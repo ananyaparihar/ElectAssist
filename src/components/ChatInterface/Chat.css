@@ -29,8 +29,15 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .message-wrapper.user {
@@ -203,12 +210,27 @@
   animation: typing 1.4s infinite ease-in-out both;
 }
 
-.typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
-.typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+.typing-indicator span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: -0.16s;
+}
 
 @keyframes typing {
-  0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
-  40% { transform: scale(1); opacity: 1; }
+
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .cursor {
@@ -217,15 +239,22 @@
 }
 
 @keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
 }
 
 /* Did You Know? Card Styles */
 .did-you-know {
-  background: linear-gradient(135deg, 
-    rgba(124, 58, 237, 0.15) 0%, 
-    rgba(15, 38, 64, 0.4) 100%);
+  background: linear-gradient(135deg,
+      rgba(124, 58, 237, 0.15) 0%,
+      rgba(15, 38, 64, 0.4) 100%);
   border: 1px solid rgba(124, 58, 237, 0.3);
   border-radius: 12px;
   padding: 16px 20px;
@@ -249,7 +278,7 @@
 
 .dyk-text {
   font-size: 14px;
-  color: rgba(255,255,255,0.85);
+  color: rgba(255, 255, 255, 0.85);
   line-height: 1.6;
   transition: opacity 0.4s ease;
   min-height: 44px;
@@ -275,7 +304,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.2);
+  background: rgba(255, 255, 255, 0.2);
   cursor: pointer;
   transition: all 0.2s;
   border: none;
@@ -297,9 +326,9 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.1);
-  color: rgba(255,255,255,0.6);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
   font-size: 12px;
   display: flex;
   align-items: center;
@@ -325,8 +354,13 @@
 }
 
 @keyframes progress {
-  from { width: 0%; }
-  to   { width: 100%; }
+  from {
+    width: 0%;
+  }
+
+  to {
+    width: 100%;
+  }
 }
 
 .message-bubble-container {
@@ -371,17 +405,116 @@
   border-radius: 20px;
   font-size: 0.85rem;
   font-weight: 500;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   z-index: 100;
   animation: toastFade 2s ease forwards;
   pointer-events: none;
 }
 
 @keyframes toastFade {
-  0% { opacity: 0; transform: translate(-50%, 10px); }
-  15% { opacity: 1; transform: translate(-50%, 0); }
-  85% { opacity: 1; transform: translate(-50%, 0); }
-  100% { opacity: 0; transform: translate(-50%, -10px); }
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+
+  15% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  85% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -10px);
+  }
 }
 
+@media (max-width: 768px) {
+  .chat-container {
+    border-radius: 14px;
+  }
 
+  .did-you-know {
+    margin: 12px 12px 0;
+    padding: 12px 14px;
+  }
+
+  .chat-messages {
+    padding: 14px;
+    gap: 14px;
+    max-height: 50vh;
+  }
+
+  .message-wrapper {
+    max-width: 100%;
+    gap: 10px;
+  }
+
+  .message-avatar {
+    width: 34px;
+    height: 34px;
+  }
+
+  .message-bubble {
+    padding: 12px 14px;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    word-break: break-word;
+  }
+
+  .chat-input-container {
+    padding: 12px;
+  }
+
+  .quick-questions {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 10px;
+    scrollbar-width: none;
+  }
+
+  .quick-question-pill {
+    flex-shrink: 0;
+    font-size: 12px;
+    padding: 7px 12px;
+    white-space: nowrap;
+  }
+
+  .chat-form {
+    gap: 10px;
+    padding-left: 14px;
+  }
+
+  .chat-input {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .did-you-know {
+    margin: 10px 8px 0;
+    padding: 10px 12px;
+  }
+
+  .dyk-text {
+    font-size: 13px;
+  }
+
+  .chat-messages {
+    padding: 10px;
+  }
+
+  .message-bubble {
+    font-size: 0.86rem;
+    padding: 10px 12px;
+  }
+
+  .chat-input-container {
+    padding: 10px;
+  }
+}

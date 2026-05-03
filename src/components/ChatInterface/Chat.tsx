@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Send, Bot, User, Copy, Check } from 'lucide-react';
-import { translateText, translateArray } from '../../services/TranslationService';
+import { LANG_CODES, translateText, translateMultiple } from '../../services/translate';
 import './Chat.css';
 
 interface Message {
@@ -181,15 +181,13 @@ const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, regi
       let reply = data.choices?.[0]?.message?.content ??
         'Sorry, I could not get a response. Please try again.';
 
-      // Translate response if language is not English
-      if (language !== 'English') {
-        reply = await translateText(reply, language);
-      }
+      const languageCode = LANG_CODES[language] || 'en';
+      const translatedReply = await translateText(reply, languageCode);
 
-      const assistantMessageApi = { role: 'assistant', content: reply };
+      const assistantMessageApi = { role: 'assistant', content: translatedReply };
       setConversationHistory(prev => [...prev, assistantMessageApi]);
 
-      typeMessage(reply);
+      typeMessage(translatedReply);
     } catch {
       setMessages(prev => [...prev, {
         id: Date.now() + 1,
@@ -247,7 +245,8 @@ const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, regi
   // Initialize/Update UI translations when language or region changes
   useEffect(() => {
     const translateUI = async () => {
-      if (language === 'English') {
+      const languageCode = LANG_CODES[language] || 'en';
+      if (languageCode === 'en') {
         setActiveGreeting(GREETING_DEFAULT);
         setActiveChips(QUICK_CHIPS_DEFAULT);
         setActivePlaceholder(PLACEHOLDER_DEFAULT);
@@ -258,9 +257,9 @@ const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, regi
 
       // Translate static UI elements
       const [greeting, placeholder, title] = await Promise.all([
-        translateText(GREETING_DEFAULT, language),
-        translateText(PLACEHOLDER_DEFAULT, language),
-        translateText('Did You Know?', language)
+        translateText(GREETING_DEFAULT, languageCode),
+        translateText(PLACEHOLDER_DEFAULT, languageCode),
+        translateText('Did You Know?', languageCode)
       ]);
 
       setActiveGreeting(greeting);
@@ -269,7 +268,7 @@ const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, regi
 
       // Translate chips labels
       const chipLabels = QUICK_CHIPS_DEFAULT.map(c => c.label);
-      const translatedLabels = await translateArray(chipLabels, language);
+      const translatedLabels = await translateMultiple(chipLabels, languageCode);
       setActiveChips(QUICK_CHIPS_DEFAULT.map((c, i) => ({
         ...c,
         label: translatedLabels[i]
@@ -277,7 +276,7 @@ const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, regi
 
       // Translate facts
       const sourceFacts = ELECTION_FACTS[region] || ELECTION_FACTS['India'];
-      const translatedFacts = await translateArray(sourceFacts, language);
+      const translatedFacts = await translateMultiple(sourceFacts, languageCode);
       setActiveFacts(translatedFacts);
     };
 

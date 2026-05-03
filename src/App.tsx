@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Clock, Home } from 'lucide-react';
 import Sidebar from './components/Layout/Sidebar';
 import Header from './components/Layout/Header';
 import Chat from './components/ChatInterface/Chat';
@@ -7,6 +8,18 @@ import Timeline from './components/ElectionTimeline/Timeline';
 import VoterJourney from './components/Simulator/VoterJourney';
 import HowToVote from './components/HowToVote/HowToVote';
 import './App.css';
+
+const mobileNavItems: Array<{
+  id: string;
+  label: string;
+  icon?: typeof Home;
+  emoji?: string;
+}> = [
+  { id: 'chat', label: 'Assistant', icon: Home },
+  { id: 'timeline', label: 'Timeline', icon: Clock },
+  { id: 'simulator', label: 'Journey', emoji: '🚶' },
+  { id: 'how-to-vote', label: 'How to Vote', emoji: '📖' },
+] as const;
 
 function App() {
   const [activeTab, setActiveTab] = useState('chat');
@@ -99,6 +112,29 @@ function App() {
             </motion.div>
           </AnimatePresence>
         </div>
+
+        <nav className="mobile-bottom-nav" aria-label="Mobile navigation">
+          {mobileNavItems.map((item) => {
+            const isActive = activeTab === item.id;
+            const Icon = item.icon;
+
+            return (
+              <button
+                key={item.id}
+                type="button"
+                className={`mobile-bottom-nav-item ${isActive ? 'active' : ''}`}
+                onClick={() => setActiveTab(item.id)}
+                aria-current={isActive ? 'page' : undefined}
+                aria-label={item.label}
+              >
+                <span className="mobile-bottom-nav-icon" aria-hidden="true">
+                  {Icon ? <Icon size={18} /> : item.emoji}
+                </span>
+                <span className="mobile-bottom-nav-label">{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
       </main>
     </div>
   );

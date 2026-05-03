@@ -1,5 +1,5 @@
 .sidebar {
-  width: 280px;
+  width: 260px;
   height: 100vh;
   background: var(--glass-bg);
   backdrop-filter: blur(12px);
@@ -88,6 +88,10 @@
   transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
+}
+
+.nav-label-short {
+  display: none;
 }
 
 .nav-item:hover {
@@ -272,4 +276,54 @@
   text-align: left;
   padding: 8px 12px;
   animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .sidebar {
+    width: 200px;
+  }
+
+  .sidebar-header {
+    padding: 0 16px;
+  }
+
+  .sidebar-content {
+    padding: 18px 12px;
+    gap: 24px;
+  }
+
+  .logo-text,
+  .nav-section-title,
+  .sidebar-checklist-section,
+  .sidebar-footer {
+    display: none;
+  }
+
+  .nav-menu {
+    align-items: center;
+  }
+
+  .nav-item {
+    justify-content: center;
+    padding: 12px 10px;
+    font-size: 12px;
+  }
+
+  .nav-label {
+    display: none;
+  }
+
+  .nav-label-short {
+    display: none;
+  }
+
+  .active-indicator {
+    top: auto;
+    bottom: 0;
+    left: 50%;
+    width: 24px;
+    height: 3px;
+    transform: translateX(-50%);
+    border-radius: 4px 4px 0 0;
+  }
 }

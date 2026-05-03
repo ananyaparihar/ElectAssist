@@ -70,10 +70,10 @@ interface HeaderProps {
 }
 
 const REGIONS = [
-  { id: 'India', label: '🇮🇳 India' },
-  { id: 'United States', label: '🇺🇸 United States' },
-  { id: 'United Kingdom', label: '🇬🇧 United Kingdom' },
-  { id: 'Australia', label: '🇦🇺 Australia' }
+  { id: 'India', label: '🇮🇳 India', mobileLabel: '🇮🇳' },
+  { id: 'United States', label: '🇺🇸 United States', mobileLabel: '🇺🇸' },
+  { id: 'United Kingdom', label: '🇬🇧 United Kingdom', mobileLabel: '🇬🇧' },
+  { id: 'Australia', label: '🇦🇺 Australia', mobileLabel: '🇦🇺' }
 ];
 
 const LANGUAGES = [
@@ -99,6 +99,8 @@ const SEARCH_SUGGESTIONS = [
 const Header: React.FC<HeaderProps> = ({ title, region, setRegion, language, setLanguage, onSearch }) => {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [showSuggestions, setShowSuggestions] = React.useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = React.useState(false);
+  const [isMobile, setIsMobile] = React.useState(() => window.innerWidth <= 768);
   const [notifications, setNotifications] = React.useState<Notification[]>(() => {
     const saved = localStorage.getItem('notifications');
     return saved ? JSON.parse(saved) : INITIAL_NOTIFICATIONS;
@@ -119,7 +121,16 @@ const Header: React.FC<HeaderProps> = ({ title, region, setRegion, language, set
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === '/' && document.activeElement?.tagName !== 'INPUT') {
         e.preventDefault();
+        setIsMobileSearchOpen(true);
         searchInputRef.current?.focus();
+      }
+    };
+
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+      if (!mobile) {
+        setIsMobileSearchOpen(false);
       }
     };
     
@@ -136,10 +147,12 @@ const Header: React.FC<HeaderProps> = ({ title, region, setRegion, language, set
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('resize', handleResize);
     
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
 
@@ -151,7 +164,20 @@ const Header: React.FC<HeaderProps> = ({ title, region, setRegion, language, set
     onSearch(query);
     setSearchQuery('');
     setShowSuggestions(false);
+    setIsMobileSearchOpen(false);
     searchInputRef.current?.blur();
+  };
+
+  const toggleMobileSearch = () => {
+    setIsMobileSearchOpen(prev => {
+      const next = !prev;
+      if (!prev) {
+        window.setTimeout(() => searchInputRef.current?.focus(), 0);
+      } else {
+        setShowSuggestions(false);
+      }
+      return next;
+    });
   };
 
   const toggleDropdown = () => {
@@ -195,7 +221,7 @@ const Header: React.FC<HeaderProps> = ({ title, region, setRegion, language, set
       <div className="header-right">
         <div className="region-selector-container">
           <select 
-            className="region-selector" 
+            className="region-selector language-selector" 
             value={language} 
             onChange={(e) => setLanguage(e.target.value)}
             style={{ marginRight: '8px' }}
@@ -211,12 +237,20 @@ const Header: React.FC<HeaderProps> = ({ title, region, setRegion, language, set
             onChange={(e) => setRegion(e.target.value)}
           >
             {REGIONS.map(r => (
-              <option key={r.id} value={r.id}>{r.label}</option>
+              <option key={r.id} value={r.id}>{isMobile ? r.mobileLabel : r.label}</option>
             ))}
           </select>
         </div>
         
-        <div className="search-container">
+        <div className={`search-container ${isMobileSearchOpen ? 'mobile-search-open' : ''}`}>
+          <button
+            type="button"
+            className="icon-button mobile-search-toggle"
+            onClick={toggleMobileSearch}
+            aria-label={isMobileSearchOpen ? 'Close search' : 'Open search'}
+          >
+            <Search size={18} />
+          </button>
           <form className="search-bar" onSubmit={handleSearchSubmit}>
             <Search size={18} className="search-icon" onClick={() => handleSearchSubmit()} style={{ cursor: 'pointer' }} />
             <input 

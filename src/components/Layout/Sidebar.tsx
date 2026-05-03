@@ -14,6 +14,13 @@ const CHECKLIST_ITEMS = [
   { id: 'ballot', label: 'Understand ballot' }
 ];
 
+const navItems = [
+  { id: 'chat', label: 'Assistant', shortLabel: 'Assistant', icon: MessageSquare },
+  { id: 'timeline', label: 'Election Timeline', shortLabel: 'Timeline', icon: Clock },
+  { id: 'simulator', label: 'My Voter Journey', shortLabel: 'Journey', icon: () => <span style={{ fontSize: '18px' }}>🚶</span> },
+  { id: 'how-to-vote', label: 'How to Vote', shortLabel: 'How to Vote', icon: () => <span style={{ fontSize: '18px' }}>📖</span> },
+];
+
 const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
   const [checklist, setChecklist] = React.useState<Record<string, boolean>>(() => {
     const saved = localStorage.getItem('civicGuideSidebarChecklist');
@@ -29,13 +36,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
   const toggleCheck = (id: string) => {
     setChecklist(prev => ({ ...prev, [id]: !prev[id] }));
   };
-
-  const navItems = [
-    { id: 'chat', label: 'Assistant', icon: MessageSquare },
-    { id: 'timeline', label: 'Election Timeline', icon: Clock },
-    { id: 'simulator', label: 'My Voter Journey', icon: () => <span style={{ fontSize: '18px' }}>🚶</span> },
-    { id: 'how-to-vote', label: 'How to Vote', icon: () => <span style={{ fontSize: '18px' }}>📖</span> },
-  ];
 
   const bottomItems = [
     { id: 'settings', label: 'Settings', icon: Settings },
@@ -61,9 +61,12 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
                 key={item.id}
                 className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
                 onClick={() => setActiveTab(item.id)}
+                title={item.label}
+                aria-label={item.label}
               >
                 <Icon className="nav-icon" size={20} />
-                <span>{item.label}</span>
+                <span className="nav-label">{item.label}</span>
+                <span className="nav-label-short">{item.shortLabel}</span>
                 {activeTab === item.id && (
                   <span className="active-indicator" />
                 )}
@@ -103,9 +106,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
           {bottomItems.map((item) => {
             const Icon = item.icon;
             return (
-              <button key={item.id} className="nav-item">
+              <button key={item.id} className="nav-item" title={item.label} aria-label={item.label}>
                 <Icon className="nav-icon" size={20} />
-                <span>{item.label}</span>
+                <span className="nav-label">{item.label}</span>
               </button>
             );
           })}
