@@ -86,7 +86,7 @@ interface ChatProps {
 
 const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, region, language }) => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [_conversationHistory, setConversationHistory] = useState<{ role: string, content: string }[]>([]);
+  const [, setConversationHistory] = useState<{ role: string, content: string }[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState<boolean>(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
@@ -101,6 +101,7 @@ const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, regi
   const [dykTitle, setDykTitle] = useState('Did You Know?');
 
   const seededRef = useRef<string | null>(null);
+  const conversationHistoryRef = useRef<{ role: string, content: string }[]>([]);
 
   const typeMessage = useCallback((fullText: string) => {
     let index = 0;
@@ -143,12 +144,9 @@ const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, regi
 
     const userMessageApi = { role: 'user', content: text.trim() };
 
-    // Use functional update to ensure we have the latest history
-    let updatedHistory: { role: string, content: string }[] = [];
-    setConversationHistory(prev => {
-      updatedHistory = [...prev, userMessageApi];
-      return updatedHistory;
-    });
+    const updatedHistory = [...conversationHistoryRef.current, userMessageApi];
+    conversationHistoryRef.current = updatedHistory;
+    setConversationHistory(updatedHistory);
 
     setMessages(prev => [...prev, userMessageUI]);
     setLoading(true);
@@ -185,7 +183,9 @@ const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, regi
       const translatedReply = await translateText(reply, languageCode);
 
       const assistantMessageApi = { role: 'assistant', content: translatedReply };
-      setConversationHistory(prev => [...prev, assistantMessageApi]);
+      const historyWithAssistant = [...conversationHistoryRef.current, assistantMessageApi];
+      conversationHistoryRef.current = historyWithAssistant;
+      setConversationHistory(historyWithAssistant);
 
       typeMessage(translatedReply);
     } catch {
@@ -281,6 +281,7 @@ const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, regi
     };
 
     translateUI().then(() => {
+      conversationHistoryRef.current = [];
       setConversationHistory([]);
     });
   }, [language, region]);
