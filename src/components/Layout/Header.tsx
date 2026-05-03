@@ -77,10 +77,10 @@ const REGIONS = [
 ];
 
 const LANGUAGES = [
-  { id: 'English', label: '🇬🇧 English' },
-  { id: 'Hindi', label: '🇮🇳 Hindi' },
-  { id: 'Spanish', label: '🇪🇸 Spanish' },
-  { id: 'French', label: '🇫🇷 French' }
+  { id: 'English', label: '🇬🇧 English', mobileLabel: '🇬🇧' },
+  { id: 'Hindi', label: '🇮🇳 Hindi', mobileLabel: '🇮🇳' },
+  { id: 'Spanish', label: '🇪🇸 Spanish', mobileLabel: '🇪🇸' },
+  { id: 'French', label: '🇫🇷 French', mobileLabel: '🇫🇷' }
 ];
 
 const SEARCH_SUGGESTIONS = [
@@ -227,7 +227,7 @@ const Header: React.FC<HeaderProps> = ({ title, region, setRegion, language, set
             style={{ marginRight: '8px' }}
           >
             {LANGUAGES.map(l => (
-              <option key={l.id} value={l.id}>{l.label}</option>
+              <option key={l.id} value={l.id}>{isMobile ? l.mobileLabel : l.label}</option>
             ))}
           </select>
 

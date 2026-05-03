@@ -385,19 +385,21 @@
     gap: 8px;
   }
 
-  .language-selector {
-    display: none;
-  }
-
   .region-selector-container {
-    max-width: 68px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
   .region-selector {
-    width: 56px;
-    min-width: 56px;
-    padding: 8px 24px 8px 12px;
+    width: 54px;
+    min-width: 54px;
+    padding: 8px 20px 8px 8px;
     text-align: center;
+  }
+
+  .language-selector {
+    margin-right: 0 !important;
   }
 
   .region-selector-container::after {
