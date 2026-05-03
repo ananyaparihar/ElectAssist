@@ -1,0 +1,61 @@
+.app-layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: var(--bg-color);
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* Background decorative elements */
+.main-content::before {
+  content: '';
+  position: absolute;
+  top: -20%;
+  right: -10%;
+  width: 60%;
+  height: 60%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0) 70%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.main-content::after {
+  content: '';
+  position: absolute;
+  bottom: -20%;
+  left: -10%;
+  width: 50%;
+  height: 50%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, rgba(168, 85, 247, 0) 70%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.content-area {
+  flex: 1;
+  padding: 0;
+  overflow-y: auto;
+  position: relative;
+  scrollbar-width: none;
+}
+
+.content-area::-webkit-scrollbar {
+  display: none;
+}
+
+.content-wrapper {
+  height: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
