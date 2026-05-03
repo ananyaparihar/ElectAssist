@@ -74,3 +74,87 @@ button {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
+
+/* ===== MOBILE RESPONSIVE ===== */
+@media (max-width: 768px) {
+
+  /* Hide sidebar, show full content */
+  .app-shell {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: 60px 1fr !important;
+  }
+
+  .app-sidebar {
+    display: none !important;
+  }
+
+  .app-main {
+    grid-column: 1 !important;
+    padding: 12px !important;
+  }
+
+  /* Header */
+  .header-sub {
+    display: none;
+  }
+
+  .header {
+    padding: 0 12px;
+  }
+
+  /* Timeline — stack vertically */
+  .timeline-track {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+
+  .tl-connector {
+    display: none !important;
+  }
+
+  /* Chat */
+  .chat-quick-row {
+    gap: 4px;
+    overflow-x: auto;
+    flex-wrap: nowrap !important;
+    padding: 8px !important;
+  }
+
+  .chat-qbtn {
+    flex-shrink: 0;
+    font-size: 11px !important;
+    padding: 4px 8px !important;
+  }
+
+  .chat-messages {
+    max-height: 50vh !important;
+  }
+
+  /* Steps */
+  .htv-page {
+    padding: 12px !important;
+  }
+
+  /* Country selector */
+  .header-brand {
+    gap: 6px;
+  }
+
+  .header-title {
+    font-size: 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-title {
+    font-size: 14px !important;
+  }
+
+  .mb-row {
+    max-width: 95% !important;
+  }
+
+  .chat-section {
+    min-height: 400px !important;
+  }
+}

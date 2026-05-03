@@ -49,11 +49,12 @@ function App() {
           />
         );
       case 'timeline':
-        return <Timeline onEventClick={navigateToChatWithQuestion} />;
+        return <Timeline language={language} onEventClick={navigateToChatWithQuestion} />;
       case 'simulator':
         return (
           <VoterJourney 
             region={region} 
+            language={language}
             onNavigateToChat={navigateToChatWithQuestion}
           />
         );
@@ -61,6 +62,7 @@ function App() {
         return (
           <HowToVote 
             region={region} 
+            language={language}
             onNavigateToChat={navigateToChatWithQuestion}
           />
         );

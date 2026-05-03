@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Send, Bot, User, Copy, Check } from 'lucide-react';
+import { translateText, translateArray } from '../../services/TranslationService';
 import './Chat.css';
 
 interface Message {
@@ -18,50 +19,20 @@ registration, primaries, Election Day, vote counting, certification,
 and inauguration. Use numbered steps for processes. Keep answers 
 under 220 words. Remind users rules vary by state/country.`;
 
-const GREETINGS: Record<string, string> = {
-  English: "Hello! I'm your Election Assistant. How can I help you today? You can ask me about registration deadlines, polling locations, or the voting process.",
-  Hindi: "नमस्ते! मैं आपका चुनाव सहायक हूँ। आज मैं आपकी कैसे मदद कर सकता हूँ? आप मुझसे पंजीकरण की समय-सीमा, मतदान केंद्र या मतदान प्रक्रिया के बारे में पूछ सकते हैं।",
-  Spanish: "¡Hola! Soy tu Asistente Electoral. ¿Cómo puedo ayudarte hoy? Puedes preguntarme sobre plazos de registro, lugares de votación o el proceso electoral.",
-  French: "Bonjour! Je suis votre Assistant Électoral. Comment puis-je vous aider aujourd'hui? Vous pouvez me poser des questions sur les délais d'inscription, les bureaux de vote ou le processus électoral."
-};
+// Google Cloud Translation API integration
+// Project: elated-card-494317-s9
 
-const QUICK_CHIPS: Record<string, { label: string, question: string }[]> = {
-  English: [
-    { label: '📋 How to register', question: 'How do I register to vote?' },
-    { label: '🪪 What ID to bring', question: 'What ID do I need on Election Day?' },
-    { label: '🗺️ Explain Electoral College', question: 'Explain the Electoral College simply' },
-    { label: '⚖️ Primary vs General', question: 'What is the difference between a primary and general election?' },
-    { label: '⏱️ How long counting takes', question: 'How long does vote counting take and why?' },
-  ],
-  Hindi: [
-    { label: '📋 पंजीकरण कैसे करें', question: 'मतदाता पंजीकरण कैसे करें?' },
-    { label: '🪪 कौन सा ID लाएं', question: 'चुनाव के दिन कौन सा पहचान पत्र लाना होगा?' },
-    { label: '🗺️ इलेक्टोरल कॉलेज', question: 'इलेक्टोरल कॉलेज को सरल भाषा में समझाएं' },
-    { label: '⚖️ प्राथमिक vs सामान्य', question: 'प्राथमिक और सामान्य चुनाव में क्या अंतर है?' },
-    { label: '⏱️ मतगणना में कितना समय', question: 'मतगणना में कितना समय लगता है और क्यों?' },
-  ],
-  Spanish: [
-    { label: '📋 Cómo registrarse', question: '¿Cómo me registro para votar?' },
-    { label: '🪪 Qué ID traer', question: '¿Qué identificación necesito el día de elecciones?' },
-    { label: '🗺️ Colegio Electoral', question: 'Explica el Colegio Electoral de forma simple' },
-    { label: '⚖️ Primaria vs General', question: '¿Cuál es la diferencia entre elección primaria y general?' },
-    { label: '⏱️ Tiempo de conteo', question: '¿Cuánto tarda el conteo de votos y por qué?' },
-  ],
-  French: [
-    { label: '📋 Comment s\'inscrire', question: 'Comment s\'inscrire pour voter?' },
-    { label: '🪪 Quel ID apporter', question: 'Quel document d\'identité apporter le jour du vote?' },
-    { label: '🗺️ Collège électoral', question: 'Expliquez le Collège électoral simplement' },
-    { label: '⚖️ Primaire vs Générale', question: 'Quelle est la différence entre élection primaire et générale?' },
-    { label: '⏱️ Durée du dépouillement', question: 'Combien de temps dure le dépouillement et pourquoi?' },
-  ]
-};
+const GREETING_DEFAULT = "Hello! I'm your Election Assistant. How can I help you today? You can ask me about registration deadlines, polling locations, or the voting process.";
 
-const PLACEHOLDERS: Record<string, string> = {
-  English: 'Type your question here...',
-  Hindi: 'अपना सवाल यहाँ लिखें...',
-  Spanish: 'Escribe tu pregunta aquí...',
-  French: 'Tapez votre question ici...'
-};
+const QUICK_CHIPS_DEFAULT = [
+  { label: '📋 How to register', question: 'How do I register to vote?' },
+  { label: '🪪 What ID to bring', question: 'What ID do I need on Election Day?' },
+  { label: '🗺️ Explain Electoral College', question: 'Explain the Electoral College simply' },
+  { label: '⚖️ Primary vs General', question: 'What is the difference between a primary and general election?' },
+  { label: '⏱️ How long counting takes', question: 'How long does vote counting take and why?' },
+];
+
+const PLACEHOLDER_DEFAULT = 'Type your question here...';
 
 const ELECTION_FACTS: Record<string, string[]> = {
   India: [
@@ -115,7 +86,7 @@ interface ChatProps {
 
 const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, region, language }) => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [conversationHistory, setConversationHistory] = useState<{ role: string, content: string }[]>([]);
+  const [_conversationHistory, setConversationHistory] = useState<{ role: string, content: string }[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState<boolean>(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
@@ -123,81 +94,15 @@ const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, regi
   const [factIndex, setFactIndex] = useState(0);
   const [fading, setFading] = useState(false);
 
-  const facts = ELECTION_FACTS[region] || ELECTION_FACTS['India'];
+  const [activeFacts, setActiveFacts] = useState<string[]>(ELECTION_FACTS[region] || ELECTION_FACTS['India']);
+  const [activeChips, setActiveChips] = useState(QUICK_CHIPS_DEFAULT);
+  const [activePlaceholder, setActivePlaceholder] = useState(PLACEHOLDER_DEFAULT);
+  const [activeGreeting, setActiveGreeting] = useState(GREETING_DEFAULT);
+  const [dykTitle, setDykTitle] = useState('Did You Know?');
 
+  const seededRef = useRef<string | null>(null);
 
-  // Initialize/Update greeting and reset history when language changes
-  useEffect(() => {
-    setMessages([{
-      id: Date.now(),
-      text: GREETINGS[language] || GREETINGS['English'],
-      sender: 'bot',
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    }]);
-    setConversationHistory([]);
-  }, [language]);
-
-  // Reset fact index when country changes
-  useEffect(() => {
-    setFactIndex(0);
-  }, [region]);
-
-  // Auto-rotate facts every 30 seconds
-  useEffect(() => {
-    const timer = setInterval(() => {
-      goToNext();
-    }, 30000);
-    return () => clearInterval(timer);
-  }, [factIndex, region]);
-
-  const goToNext = () => {
-    setFading(true);
-    setTimeout(() => {
-      setFactIndex(prev => (prev + 1) % facts.length);
-      setFading(false);
-    }, 400);
-  };
-
-  const goToPrev = () => {
-    setFading(true);
-    setTimeout(() => {
-      setFactIndex(prev => (prev - 1 + facts.length) % facts.length);
-      setFading(false);
-    }, 400);
-  };
-
-  const jumpToFact = (index: number) => {
-    if (index === factIndex) return;
-    setFading(true);
-    setTimeout(() => {
-      setFactIndex(index);
-      setFading(false);
-    }, 400);
-  };
-
-  const handleCopy = (id: number, text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setShowToast(true);
-    setTimeout(() => {
-      setCopiedId(null);
-      setShowToast(false);
-    }, 2000);
-  };
-
-  const seededRef = React.useRef<string | null>(null);
-
-  useEffect(() => {
-    if (initialQuestion && initialQuestion !== seededRef.current) {
-      seededRef.current = initialQuestion;
-      sendMessage(initialQuestion);
-      if (clearInitialQuestion) {
-        clearInitialQuestion();
-      }
-    }
-  }, [initialQuestion]);
-
-  const typeMessage = (fullText: string) => {
+  const typeMessage = useCallback((fullText: string) => {
     let index = 0;
     const botMessageId = Date.now();
 
@@ -224,9 +129,9 @@ const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, regi
         ));
       }
     }, 12);
-  };
+  }, []);
 
-  const sendMessage = async (text: string) => {
+  const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || loading) return;
 
     const userMessageUI: Message = {
@@ -237,15 +142,19 @@ const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, regi
     };
 
     const userMessageApi = { role: 'user', content: text.trim() };
-    const updatedHistory = [...conversationHistory, userMessageApi];
 
-    setConversationHistory(updatedHistory);
+    // Use functional update to ensure we have the latest history
+    let updatedHistory: { role: string, content: string }[] = [];
+    setConversationHistory(prev => {
+      updatedHistory = [...prev, userMessageApi];
+      return updatedHistory;
+    });
+
     setMessages(prev => [...prev, userMessageUI]);
     setLoading(true);
 
     try {
-      const languageInstruction = `Always respond in ${language}. All explanations, steps, and answers must be in ${language}.`;
-
+      // Always prompt in English for better consistency, then translate response
       const response = await fetch(
         'https://api.groq.com/openai/v1/chat/completions',
         {
@@ -260,7 +169,7 @@ const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, regi
             messages: [
               {
                 role: 'system',
-                content: `${languageInstruction}\n\n${SYSTEM_PROMPT}\n\nThe user is asking about elections in ${region}. Answer with that country's specific rules and processes.`
+                content: `${SYSTEM_PROMPT}\n\nThe user is asking about elections in ${region}.`
               },
               ...updatedHistory
             ]
@@ -269,14 +178,19 @@ const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, regi
       );
 
       const data = await response.json();
-      const reply = data.choices?.[0]?.message?.content ??
+      let reply = data.choices?.[0]?.message?.content ??
         'Sorry, I could not get a response. Please try again.';
+
+      // Translate response if language is not English
+      if (language !== 'English') {
+        reply = await translateText(reply, language);
+      }
 
       const assistantMessageApi = { role: 'assistant', content: reply };
       setConversationHistory(prev => [...prev, assistantMessageApi]);
 
       typeMessage(reply);
-    } catch (error) {
+    } catch {
       setMessages(prev => [...prev, {
         id: Date.now() + 1,
         text: 'Connection error. Please check your internet and try again.',
@@ -286,6 +200,41 @@ const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, regi
     }
 
     setLoading(false);
+  }, [language, loading, region, typeMessage]);
+
+  const goToNext = useCallback(() => {
+    setFading(true);
+    setTimeout(() => {
+      setFactIndex(prev => (prev + 1) % activeFacts.length);
+      setFading(false);
+    }, 400);
+  }, [activeFacts.length]);
+
+  const goToPrev = useCallback(() => {
+    setFading(true);
+    setTimeout(() => {
+      setFactIndex(prev => (prev - 1 + activeFacts.length) % activeFacts.length);
+      setFading(false);
+    }, 400);
+  }, [activeFacts.length]);
+
+  const jumpToFact = useCallback((index: number) => {
+    if (index === factIndex) return;
+    setFading(true);
+    setTimeout(() => {
+      setFactIndex(index);
+      setFading(false);
+    }, 400);
+  }, [factIndex]);
+
+  const handleCopy = (id: number, text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setShowToast(true);
+    setTimeout(() => {
+      setCopiedId(null);
+      setShowToast(false);
+    }, 2000);
   };
 
   const handleSend = (e?: React.FormEvent) => {
@@ -295,21 +244,95 @@ const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, regi
     setInputValue('');
   };
 
-  const chips = QUICK_CHIPS[language] || QUICK_CHIPS['English'];
+  // Initialize/Update UI translations when language or region changes
+  useEffect(() => {
+    const translateUI = async () => {
+      if (language === 'English') {
+        setActiveGreeting(GREETING_DEFAULT);
+        setActiveChips(QUICK_CHIPS_DEFAULT);
+        setActivePlaceholder(PLACEHOLDER_DEFAULT);
+        setActiveFacts(ELECTION_FACTS[region] || ELECTION_FACTS['India']);
+        setDykTitle('Did You Know?');
+        return;
+      }
+
+      // Translate static UI elements
+      const [greeting, placeholder, title] = await Promise.all([
+        translateText(GREETING_DEFAULT, language),
+        translateText(PLACEHOLDER_DEFAULT, language),
+        translateText('Did You Know?', language)
+      ]);
+
+      setActiveGreeting(greeting);
+      setActivePlaceholder(placeholder);
+      setDykTitle(title);
+
+      // Translate chips labels
+      const chipLabels = QUICK_CHIPS_DEFAULT.map(c => c.label);
+      const translatedLabels = await translateArray(chipLabels, language);
+      setActiveChips(QUICK_CHIPS_DEFAULT.map((c, i) => ({
+        ...c,
+        label: translatedLabels[i]
+      })));
+
+      // Translate facts
+      const sourceFacts = ELECTION_FACTS[region] || ELECTION_FACTS['India'];
+      const translatedFacts = await translateArray(sourceFacts, language);
+      setActiveFacts(translatedFacts);
+    };
+
+    translateUI().then(() => {
+      setConversationHistory([]);
+    });
+  }, [language, region]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setMessages([{
+        id: Date.now(),
+        text: activeGreeting,
+        sender: 'bot',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }]);
+    }, 0);
+  }, [activeGreeting]);
+
+  // Reset fact index when country changes
+  useEffect(() => {
+    setTimeout(() => setFactIndex(0), 0);
+  }, [region]);
+
+  // Auto-rotate facts every 30 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      goToNext();
+    }, 30000);
+    return () => clearInterval(timer);
+  }, [goToNext]);
+
+  useEffect(() => {
+    if (initialQuestion && initialQuestion !== seededRef.current) {
+      seededRef.current = initialQuestion;
+      sendMessage(initialQuestion);
+      if (clearInitialQuestion) {
+        clearInitialQuestion();
+      }
+    }
+  }, [initialQuestion, clearInitialQuestion, sendMessage]);
 
   return (
     <div className="chat-container">
       <div className="did-you-know">
         <div className="dyk-header">
           <span>💡</span>
-          <span>Did You Know?</span>
+          <span>{dykTitle}</span>
         </div>
         <p className={`dyk-text ${fading ? 'fade' : ''}`}>
-          {facts[factIndex]}
+          {activeFacts[factIndex]}
         </p>
         <div className="dyk-footer">
           <div className="dyk-dots">
-            {facts.map((_, i) => (
+            {activeFacts.map((_, i) => (
               <button
                 key={i}
                 className={`dyk-dot ${i === factIndex ? 'active' : ''}`}
@@ -378,7 +401,7 @@ const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, regi
 
       <div className="chat-input-container">
         <div className="quick-questions">
-          {chips.map((q, i) => (
+          {activeChips.map((q, i) => (
             <button key={i} className="quick-question-pill" onClick={() => sendMessage(q.question)} disabled={loading}>
               {q.label}
             </button>
@@ -388,7 +411,7 @@ const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, regi
           <input
             type="text"
             className="chat-input"
-            placeholder={PLACEHOLDERS[language] || PLACEHOLDERS['English']}
+            placeholder={activePlaceholder}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             disabled={loading}

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowRight, RotateCcw, MessageSquare } from 'lucide-react';
+import { translateText } from '../../services/TranslationService';
 import './VoterJourney.css';
 
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
@@ -201,10 +202,11 @@ const VOTER_JOURNEY = [
 
 interface VoterJourneyProps {
   region: string;
+  language: string;
   onNavigateToChat: (question: string) => void;
 }
 
-const VoterJourney: React.FC<VoterJourneyProps> = ({ region, onNavigateToChat }) => {
+const VoterJourney: React.FC<VoterJourneyProps> = ({ region, language, onNavigateToChat }) => {
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
@@ -212,10 +214,49 @@ const VoterJourney: React.FC<VoterJourneyProps> = ({ region, onNavigateToChat })
   const [isLoading, setIsLoading] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [finalDebrief, setFinalDebrief] = useState<string | null>(null);
+  const [activeJourney, setActiveJourney] = useState(VOTER_JOURNEY);
+  const [headerText, setHeaderText] = useState({ title: 'My Voter Journey', subtitle: 'Experience the voting process as a first-time citizen voter' });
 
-  const stage = VOTER_JOURNEY[currentStageIndex];
+  useEffect(() => {
+    const translateJourney = async () => {
+      if (language === 'English') {
+        setActiveJourney(VOTER_JOURNEY);
+        setHeaderText({ title: 'My Voter Journey', subtitle: 'Experience the voting process as a first-time citizen voter' });
+        return;
+      }
 
-  const handleChoice = async (choice: any) => {
+      const [title, sub] = await Promise.all([
+        translateText('My Voter Journey', language),
+        translateText('Experience the voting process as a first-time citizen voter', language)
+      ]);
+      setHeaderText({ title: `🚶 ${title}`, subtitle: sub });
+
+      const translatedJourney = await Promise.all(VOTER_JOURNEY.map(async (stage) => {
+        const [translatedStage, translatedScenario] = await Promise.all([
+          translateText(stage.stage, language),
+          translateText(stage.scenario, language)
+        ]);
+
+        const translatedChoices = await Promise.all(stage.choices.map(async (choice) => {
+          const [translatedTextContent, translatedExplanation] = await Promise.all([
+            translateText(choice.text, language),
+            translateText(choice.explanation, language)
+          ]);
+          return { ...choice, text: translatedTextContent, explanation: translatedExplanation };
+        }));
+
+        return { ...stage, stage: translatedStage, scenario: translatedScenario, choices: translatedChoices };
+      }));
+
+      setActiveJourney(translatedJourney);
+    };
+
+    translateJourney();
+  }, [language]);
+
+  const stage = activeJourney[currentStageIndex];
+
+  const handleChoice = async (choice: { id: string; text: string; correct: boolean; explanation: string }) => {
     if (selectedChoiceId || isLoading) return;
 
     setSelectedChoiceId(choice.id);
@@ -251,8 +292,13 @@ const VoterJourney: React.FC<VoterJourneyProps> = ({ region, onNavigateToChat })
       });
 
       const data = await response.json();
-      setAiTip(data.choices[0].message.content);
-    } catch (error) {
+      let tip = data.choices[0].message.content;
+      
+      if (language !== 'English') {
+        tip = await translateText(tip, language);
+      }
+      setAiTip(tip);
+    } catch {
       setAiTip("Every step you take in understanding the election process makes you a more powerful citizen. Remember, your voice is your greatest tool for change!");
     } finally {
       setIsLoading(false);
@@ -298,8 +344,13 @@ const VoterJourney: React.FC<VoterJourneyProps> = ({ region, onNavigateToChat })
       });
 
       const data = await response.json();
-      setFinalDebrief(data.choices[0].message.content);
-    } catch (error) {
+      let debrief = data.choices[0].message.content;
+      
+      if (language !== 'English') {
+        debrief = await translateText(debrief, language);
+      }
+      setFinalDebrief(debrief);
+    } catch {
       setFinalDebrief("Congratulations on completing your Voter Journey! You've gained essential knowledge about registration, voting rights, and staying active in your community. Democracy thrives when informed citizens like you participate and make their voices heard.");
     } finally {
       setIsLoading(false);
@@ -307,10 +358,10 @@ const VoterJourney: React.FC<VoterJourneyProps> = ({ region, onNavigateToChat })
   };
 
   const getResultLabel = () => {
-    if (score === 6) return { label: "🏆 Perfect Voter! You're fully prepared!", color: '#22c55e' };
-    if (score >= 4) return { label: "⭐ Great Job! Almost election-ready!", color: '#4ade80' };
-    if (score >= 2) return { label: "📚 Keep Learning! Review a few steps.", color: '#f59e0b' };
-    return { label: "🌱 Just Starting! Use CivicGuide to learn more.", color: '#ef4444' };
+    if (score === 6) return { label: "🏆 Perfect Voter!", color: '#22c55e' };
+    if (score >= 4) return { label: "⭐ Great Job!", color: '#4ade80' };
+    if (score >= 2) return { label: "📚 Keep Learning!", color: '#f59e0b' };
+    return { label: "🌱 Just Starting!", color: '#ef4444' };
   };
 
   const resetJourney = () => {
@@ -363,11 +414,11 @@ const VoterJourney: React.FC<VoterJourneyProps> = ({ region, onNavigateToChat })
   return (
     <div className="journey-container">
       <div className="journey-header">
-        <h1 className="journey-title"><span>🚶</span> My Voter Journey</h1>
-        <p className="journey-subtitle">Experience the voting process as a first-time citizen voter</p>
+        <h1 className="journey-title">{headerText.title}</h1>
+        <p className="journey-subtitle">{headerText.subtitle}</p>
         <div className="journey-stats">
           <div className="progress-dots">
-            {VOTER_JOURNEY.map((_, i) => (
+            {activeJourney.map((_, i) => (
               <div
                 key={i}
                 className={`progress-dot ${i === currentStageIndex ? 'active' : ''} ${i < currentStageIndex ? 'completed' : ''}`}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, MapPin, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { translateText } from '../../services/TranslationService';
 import './Timeline.css';
 
 interface TimelineEvent {
@@ -12,7 +13,7 @@ interface TimelineEvent {
   icon: React.ElementType;
 }
 
-const events: TimelineEvent[] = [
+const INITIAL_EVENTS: TimelineEvent[] = [
   {
     id: '1',
     date: 'Sep 15, 2026',
@@ -49,14 +50,41 @@ const events: TimelineEvent[] = [
 
 interface TimelineProps {
   onEventClick?: (question: string) => void;
+  language: string;
 }
 
-const Timeline: React.FC<TimelineProps> = ({ onEventClick }) => {
+const Timeline: React.FC<TimelineProps> = ({ onEventClick, language }) => {
+  const [events, setEvents] = React.useState<TimelineEvent[]>(INITIAL_EVENTS);
+  const [headerText, setHeaderText] = React.useState({ title: '2026 General Election Timeline', sub: 'Stay on top of important dates and deadlines.' });
+
+  React.useEffect(() => {
+    const translateContent = async () => {
+      if (language === 'English') {
+        setEvents(INITIAL_EVENTS);
+        setHeaderText({ title: '2026 General Election Timeline', sub: 'Stay on top of important dates and deadlines.' });
+        return;
+      }
+
+      const translatedTitle = await translateText('2026 General Election Timeline', language);
+      const translatedSub = await translateText('Stay on top of important dates and deadlines.', language);
+      setHeaderText({ title: translatedTitle, sub: translatedSub });
+
+      const translatedEvents = await Promise.all(INITIAL_EVENTS.map(async (event) => ({
+        ...event,
+        title: await translateText(event.title, language),
+        description: await translateText(event.description, language),
+      })));
+      setEvents(translatedEvents);
+    };
+
+    translateContent();
+  }, [language]);
+
   return (
     <div className="timeline-container">
       <div className="timeline-header">
-        <h2>2026 General Election Timeline</h2>
-        <p>Stay on top of important dates and deadlines.</p>
+        <h2>{headerText.title}</h2>
+        <p>{headerText.sub}</p>
       </div>
       
       <div className="timeline-content">

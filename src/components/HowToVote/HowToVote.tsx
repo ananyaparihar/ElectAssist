@@ -1,17 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { RotateCcw, ArrowRight, AlertTriangle } from 'lucide-react';
+import { translateText } from '../../services/TranslationService';
 import './HowToVote.css';
 
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
 
+interface ElectionStep {
+  step: number;
+  emoji: string;
+  title: string;
+  description: string;
+  tip: string;
+}
+
 interface HowToVoteProps {
   region: string;
+  language: string;
   onNavigateToChat: (question: string) => void;
 }
 
-const HowToVote: React.FC<HowToVoteProps> = ({ region, onNavigateToChat }) => {
-  const [electionSteps, setElectionSteps] = useState<any[]>([]);
+const HowToVote: React.FC<HowToVoteProps> = ({ region, language, onNavigateToChat }) => {
+  const [electionSteps, setElectionSteps] = useState<ElectionStep[]>([]);
   const [loading, setLoading] = useState(false);
+  const [headerText, setHeaderText] = useState({ title: 'How to Vote', subtitle: `Step-by-step voting guide for ${region}`, btn: `Regenerate for ${region}` });
+
+  useEffect(() => {
+    const translateHeader = async () => {
+      if (language === 'English') {
+        setHeaderText({ title: 'How to Vote', subtitle: `Step-by-step voting guide for ${region}`, btn: `Regenerate for ${region}` });
+        return;
+      }
+      const [title, subtitle, btn] = await Promise.all([
+        translateText('How to Vote', language),
+        translateText(`Step-by-step voting guide for ${region}`, language),
+        translateText(`Regenerate for ${region}`, language)
+      ]);
+      setHeaderText({ title: `📖 ${title}`, subtitle, btn });
+    };
+    translateHeader();
+  }, [language, region]);
 
   const fetchElectionSteps = async (country: string) => {
     setLoading(true);
@@ -74,16 +101,31 @@ const HowToVote: React.FC<HowToVoteProps> = ({ region, onNavigateToChat }) => {
         if (arrayProp) steps = arrayProp;
       }
 
-      setElectionSteps(Array.isArray(steps) ? steps : []);
-    } catch (error) {
-      console.error('Steps fetch failed:', error);
+      const finalSteps = Array.isArray(steps) ? steps : [];
+
+      if (language !== 'English' && finalSteps.length > 0) {
+        const translatedSteps = await Promise.all(finalSteps.map(async (s: ElectionStep) => ({
+          ...s,
+          title: await translateText(s.title, language),
+          description: await translateText(s.description, language),
+          tip: await translateText(s.tip, language)
+        })));
+        setElectionSteps(translatedSteps);
+      } else {
+        setElectionSteps(finalSteps);
+      }
+    } catch {
+      console.error('Steps fetch failed');
       setElectionSteps([]);
     }
     setLoading(false);
   };
 
   useEffect(() => {
-    fetchElectionSteps(region);
+    const triggerFetch = async () => {
+      await fetchElectionSteps(region);
+    };
+    triggerFetch();
   }, [region]);
 
   const getDisclaimerLink = () => {
@@ -107,12 +149,12 @@ const HowToVote: React.FC<HowToVoteProps> = ({ region, onNavigateToChat }) => {
     <div className="htv-page">
       <div className="htv-header">
         <div className="htv-header-info">
-          <h1 className="htv-title">📖 How to Vote</h1>
-          <p className="htv-subtitle">Step-by-step voting guide for {region}</p>
+          <h1 className="htv-title">{headerText.title}</h1>
+          <p className="htv-subtitle">{headerText.subtitle}</p>
         </div>
         <button className="htv-refresh-btn" onClick={() => fetchElectionSteps(region)} disabled={loading}>
           <RotateCcw size={14} />
-          Regenerate for {region}
+          {headerText.btn}
         </button>
       </div>
 
