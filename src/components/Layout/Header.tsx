@@ -215,6 +215,7 @@ const Header: React.FC<HeaderProps> = ({ title, region, setRegion, language, set
   return (
     <header className="header">
       <div className="header-left">
+        <h2 className="header-mobile-brand">ElectAssist</h2>
         <h2 className="header-title">{title}</h2>
       </div>
 
@@ -232,7 +233,7 @@ const Header: React.FC<HeaderProps> = ({ title, region, setRegion, language, set
           </select>
 
           <select 
-            className="region-selector" 
+            className="region-selector country-selector" 
             value={region} 
             onChange={(e) => setRegion(e.target.value)}
           >

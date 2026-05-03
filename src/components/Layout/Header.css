@@ -18,6 +18,14 @@
   letter-spacing: -0.01em;
 }
 
+.header-mobile-brand {
+  display: none;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
+}
+
 .header-right {
   display: flex;
   align-items: center;
@@ -370,19 +378,23 @@
 
 @media (max-width: 768px) {
   .header {
-    padding: 10px 12px;
-    min-height: 64px;
-    height: auto;
-    gap: 10px;
+    padding: 0 8px;
+    gap: 6px;
+    min-height: 56px;
   }
 
   .header-title {
-    font-size: 1.15rem;
+    display: none;
+  }
+
+  .header-mobile-brand {
+    display: block;
   }
 
   .header-right {
     margin-left: auto;
     gap: 8px;
+    flex-wrap: nowrap;
   }
 
   .region-selector-container {
@@ -391,44 +403,50 @@
     gap: 6px;
   }
 
+  /* Hide all search UI on mobile */
+  .search-bar,
+  .search-container,
+  input[type="search"],
+  .header-search {
+    display: none !important;
+  }
+
+  /* Make dropdowns smaller */
+  .language-selector,
+  .country-selector,
+  select {
+    font-size: 11px !important;
+    padding: 4px 6px !important;
+    max-width: 100px !important;
+  }
+
   .region-selector {
-    width: 54px;
-    min-width: 54px;
-    padding: 8px 20px 8px 8px;
+    width: auto;
+    min-width: 52px;
     text-align: center;
   }
 
-  .language-selector {
-    margin-right: 0 !important;
-  }
-
   .region-selector-container::after {
-    right: 10px;
-  }
-
-  .mobile-search-toggle {
-    display: flex;
-  }
-
-  .search-bar {
     display: none;
   }
 
-  .search-container.mobile-search-open .search-bar {
-    display: flex;
-    position: absolute;
-    right: 0;
-    top: calc(100% + 8px);
-    width: min(280px, calc(100vw - 24px));
-    z-index: 60;
-    background: #121827;
+  /* Keep logo small */
+  .header-title,
+  .header-mobile-brand {
+    font-size: 13px !important;
   }
 
-  .search-container.mobile-search-open .search-suggestions {
-    top: calc(100% + 60px);
-    right: 0;
-    left: auto;
-    width: min(280px, calc(100vw - 24px));
+  .header-icon {
+    font-size: 16px !important;
+  }
+
+  .header-badge {
+    display: none !important;
+  }
+
+  .icon-button {
+    width: 34px;
+    height: 34px;
   }
 
   .notification-dropdown {
