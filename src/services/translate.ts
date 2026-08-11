@@ -1,6 +1,3 @@
-const TRANSLATE_KEY = import.meta.env.VITE_GOOGLE_TRANSLATE_KEY;
-const TRANSLATE_ENDPOINT = 'https://translation.googleapis.com/language/translate/v2';
-
 export const LANG_CODES: Record<string, string> = {
   English: 'en',
   Hindi: 'hi',
@@ -8,68 +5,46 @@ export const LANG_CODES: Record<string, string> = {
   French: 'fr',
 };
 
+// Calls our own Vercel serverless function (/api/translate.ts), which holds
+// the Groq API key server-side. Never call Groq directly from the browser —
+// Groq keys have no domain/referrer restriction option, so an exposed key
+// is a fully open key.
+const TRANSLATE_ENDPOINT = '/api/translate';
+
 interface TranslateApiResponse {
-  data?: {
-    translations?: Array<{ translatedText: string }>;
-  };
-  error?: {
-    message?: string;
-  };
+  translations?: string[];
+  error?: string;
 }
 
-export async function translateText(text: string, targetLang: string): Promise<string> {
-  if (!text || targetLang === 'en') return text;
-  if (!TRANSLATE_KEY) return text;
-
-  try {
-    const response = await fetch(`${TRANSLATE_ENDPOINT}?key=${TRANSLATE_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        q: text,
-        target: targetLang,
-        format: 'text',
-      }),
-    });
-
-    const data = (await response.json()) as TranslateApiResponse;
-    if (!response.ok || data.error) {
-      console.error('Translation failed:', data.error?.message || response.statusText);
-      return text;
-    }
-
-    return data.data?.translations?.[0]?.translatedText || text;
-  } catch (error) {
-    console.error('Translation failed:', error);
-    return text;
-  }
-}
-
-export async function translateMultiple(texts: string[], targetLang: string): Promise<string[]> {
+async function callTranslateApi(texts: string[], targetLang: string): Promise<string[]> {
   if (!texts.length || targetLang === 'en') return texts;
-  if (!TRANSLATE_KEY) return texts;
 
   try {
-    const response = await fetch(`${TRANSLATE_ENDPOINT}?key=${TRANSLATE_KEY}`, {
+    const response = await fetch(TRANSLATE_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        q: texts,
-        target: targetLang,
-        format: 'text',
-      }),
+      body: JSON.stringify({ texts, targetLang }),
     });
 
     const data = (await response.json()) as TranslateApiResponse;
     if (!response.ok || data.error) {
-      console.error('Translation failed:', data.error?.message || response.statusText);
+      console.error('Translation failed:', data.error || response.statusText);
       return texts;
     }
 
-    const translated = data.data?.translations?.map((t) => t.translatedText) || [];
-    return translated.length === texts.length ? translated : texts;
+    return data.translations && data.translations.length === texts.length ? data.translations : texts;
   } catch (error) {
     console.error('Translation failed:', error);
     return texts;
   }
+}
+
+export async function translateText(text: string, targetLang: string): Promise<string> {
+  if (!text) return text;
+  const [translated] = await callTranslateApi([text], targetLang);
+  return translated;
+}
+
+export async function translateMultiple(texts: string[], targetLang: string): Promise<string[]> {
+  return callTranslateApi(texts, targetLang);
 }

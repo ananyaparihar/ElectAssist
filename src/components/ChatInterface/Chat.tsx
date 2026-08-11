@@ -135,6 +135,9 @@ const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, regi
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || loading) return;
 
+    console.log('Groq Key exists:', !!import.meta.env.VITE_GROQ_API_KEY);
+    console.log('Translate Key exists:', !!import.meta.env.VITE_GOOGLE_TRANSLATE_KEY);
+
     const userMessageUI: Message = {
       id: Date.now(),
       text: text.trim(),
