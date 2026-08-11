@@ -24,7 +24,13 @@ under 220 words. Remind users rules vary by state/country.`;
 
 const GREETING_DEFAULT = "Hello! I'm your Election Assistant. How can I help you today? You can ask me about registration deadlines, polling locations, or the voting process.";
 
-const QUICK_CHIPS_DEFAULT = [
+interface QuickChip {
+  label: string;
+  question: string;
+  displayQuestion?: string;
+}
+
+const QUICK_CHIPS_DEFAULT: QuickChip[] = [
   { label: '📋 How to register', question: 'How do I register to vote?' },
   { label: '🪪 What ID to bring', question: 'What ID do I need on Election Day?' },
   { label: '🗺️ Explain Electoral College', question: 'Explain the Electoral College simply' },
@@ -95,7 +101,7 @@ const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, regi
   const [fading, setFading] = useState(false);
 
   const [activeFacts, setActiveFacts] = useState<string[]>(ELECTION_FACTS[region] || ELECTION_FACTS['India']);
-  const [activeChips, setActiveChips] = useState(QUICK_CHIPS_DEFAULT);
+  const [activeChips, setActiveChips] = useState<QuickChip[]>(QUICK_CHIPS_DEFAULT);
   const [activePlaceholder, setActivePlaceholder] = useState(PLACEHOLDER_DEFAULT);
   const [activeGreeting, setActiveGreeting] = useState(GREETING_DEFAULT);
   const [dykTitle, setDykTitle] = useState('Did You Know?');
@@ -132,15 +138,12 @@ const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, regi
     }, 12);
   }, []);
 
-  const sendMessage = useCallback(async (text: string) => {
+  const sendMessage = useCallback(async (text: string, displayText?: string) => {
     if (!text.trim() || loading) return;
-
-    console.log('Groq Key exists:', !!import.meta.env.VITE_GROQ_API_KEY);
-    console.log('Translate Key exists:', !!import.meta.env.VITE_GOOGLE_TRANSLATE_KEY);
 
     const userMessageUI: Message = {
       id: Date.now(),
-      text: text.trim(),
+      text: (displayText ?? text).trim(),
       sender: 'user',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
@@ -251,7 +254,7 @@ const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, regi
       const languageCode = LANG_CODES[language] || 'en';
       if (languageCode === 'en') {
         setActiveGreeting(GREETING_DEFAULT);
-        setActiveChips(QUICK_CHIPS_DEFAULT);
+        setActiveChips(QUICK_CHIPS_DEFAULT.map(c => ({ ...c, displayQuestion: c.question })));
         setActivePlaceholder(PLACEHOLDER_DEFAULT);
         setActiveFacts(ELECTION_FACTS[region] || ELECTION_FACTS['India']);
         setDykTitle('Did You Know?');
@@ -269,12 +272,19 @@ const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, regi
       setActivePlaceholder(placeholder);
       setDykTitle(title);
 
-      // Translate chips labels
+      // Translate chip labels AND the underlying question text, so the
+      // message bubble shown after clicking a chip is also translated
+      // (the English `question` is still sent to Groq for consistency).
       const chipLabels = QUICK_CHIPS_DEFAULT.map(c => c.label);
-      const translatedLabels = await translateMultiple(chipLabels, languageCode);
+      const chipQuestions = QUICK_CHIPS_DEFAULT.map(c => c.question);
+      const [translatedLabels, translatedQuestions] = await Promise.all([
+        translateMultiple(chipLabels, languageCode),
+        translateMultiple(chipQuestions, languageCode)
+      ]);
       setActiveChips(QUICK_CHIPS_DEFAULT.map((c, i) => ({
         ...c,
-        label: translatedLabels[i]
+        label: translatedLabels[i],
+        displayQuestion: translatedQuestions[i]
       })));
 
       // Translate facts
@@ -405,7 +415,7 @@ const Chat: React.FC<ChatProps> = ({ initialQuestion, clearInitialQuestion, regi
       <div className="chat-input-container">
         <div className="quick-questions">
           {activeChips.map((q, i) => (
-            <button key={i} className="quick-question-pill" onClick={() => sendMessage(q.question)} disabled={loading}>
+            <button key={i} className="quick-question-pill" onClick={() => sendMessage(q.question, q.displayQuestion)} disabled={loading}>
               {q.label}
             </button>
           ))}
